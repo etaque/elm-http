@@ -294,14 +294,15 @@ type RawError
 
 {-| The kinds of errors you typically want in practice. When you get a
 response but its status is not in the 200 range, it will trigger a
-`BadResponse`. When you try to decode JSON but something goes wrong,
-you will get an `UnexpectedPayload`.
+`BadResponse` containing status code, status text and response body. 
+When you try to decode JSON but something goes wrong, you will get an 
+`UnexpectedPayload`.
 -}
 type Error
     = Timeout
     | NetworkError
     | UnexpectedPayload String
-    | BadResponse Int String
+    | BadResponse Int String String
 
 
 -- ACTUALLY SEND REQUESTS
@@ -418,7 +419,7 @@ handleResponse : (String -> Task Error a) -> Response -> Task Error a
 handleResponse handle response =
   case 200 <= response.status && response.status < 300 of
     False ->
-        fail (BadResponse response.status response.statusText)
+        fail (BadResponse response.status response.statusText response.body)
 
     True ->
         case response.value of
